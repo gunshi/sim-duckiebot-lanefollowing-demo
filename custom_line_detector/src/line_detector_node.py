@@ -17,6 +17,12 @@ import time
 from line_detector.line_detector_plot import color_segment, drawLines
 import numpy as np
 
+from sensor_msgs.msg import CameraInfo
+from duckietown_utils.path_utils import get_ros_package_path
+from duckietown_utils.yaml_wrap import (yaml_load_file, yaml_write_to_file)
+import os.path
+from duckietown_utils import (logger, get_duckiefleet_root)
+
 
 class LineDetectorNode(object):
     def __init__(self):
@@ -35,7 +41,7 @@ class LineDetectorNode(object):
         # Only be verbose every 10 cycles
         self.intermittent_interval = 100
         self.intermittent_counter = 0
-
+	self.calibfile = ''
         # color correction
         self.ai = AntiInstagram()
 
@@ -49,15 +55,23 @@ class LineDetectorNode(object):
         self.detector_intersection = None
         self.detector_used = self.detector
 
-
+	self.pcm_ = None
+	self.veh = ''
         self.verbose = None
         self.updateParams(None)
 
+	print('calib file is')
+	print(self.calibfile)
+	print(self.veh)
+	self._load_camera_info(self.calibfile)
         self.fsm_state = "NORMAL_JOYSTICK_CONTROL"
 
         # Publishers
         self.pub_lines = rospy.Publisher("~segment_list", SegmentList, queue_size=1)
         self.pub_image = rospy.Publisher("~image_with_lines", Image, queue_size=1)
+        # Publisher for camera info - needed for the ground_projection
+        self.cam_info_pub = rospy.Publisher('/{}/camera_node/real_camera_info'.format(
+            self.veh), CameraInfo, queue_size=1)
 
         # Subscribers
         self.sub_image = rospy.Subscriber("~corrected_image/compressed", CompressedImage, self.cbImage, queue_size=1)
@@ -80,14 +94,17 @@ class LineDetectorNode(object):
 
 
     def updateParams(self, _event):
+	print('updating params')
         old_verbose = self.verbose
+        self.veh = rospy.get_param('~veh', True)
         self.verbose = rospy.get_param('~verbose', True)
+        self.calibfile = rospy.get_param('~calibfile')
         # self.loginfo('verbose = %r' % self.verbose)
         if self.verbose != old_verbose:
             self.loginfo('Verbose is now %r' % self.verbose)
 
         self.image_size = rospy.get_param('~img_size')
-        self.top_cutoff = rospy.get_param('~top_cutoff')
+        self.top_cutoff = rospy.get_param('~top_cutoff')-15
 
         if self.detector is None:
             c = rospy.get_param('~detector')
@@ -159,8 +176,38 @@ class LineDetectorNode(object):
             # Release the thread lock
             self.thread_lock.release()
 
-    def processImage_(self, image_msg):
 
+
+    def _load_camera_info(self, filename):
+        calib_data = yaml_load_file(filename)
+        #     logger.info(yaml_dump(calib_data))
+        self.pcm_ = CameraInfo()
+
+        self.pcm_.width = calib_data['image_width']
+        self.pcm_.height = calib_data['image_height']
+        self.pcm_.K = np.array(calib_data['camera_matrix']['data']).reshape((3,3))
+        self.pcm_.D = np.array(calib_data['distortion_coefficients']['data']).reshape((1,5))
+        self.pcm_.R = np.array(calib_data['rectification_matrix']['data']).reshape((3,3))
+        self.pcm_.P = np.array(calib_data['projection_matrix']['data']).reshape((3,4))
+        self.pcm_.distortion_model = calib_data['distortion_model']
+
+
+    def rectify(self, cv_image_raw):
+        '''Undistort image'''
+        cv_image_rectified = np.zeros(np.shape(cv_image_raw))
+        mapx = np.ndarray(shape=(self.pcm_.height, self.pcm_.width, 1), dtype='float32')
+        mapy = np.ndarray(shape=(self.pcm_.height, self.pcm_.width, 1), dtype='float32')
+        mapx, mapy = cv2.initUndistortRectifyMap(self.pcm_.K, self.pcm_.D, self.pcm_.R, self.pcm_.P, (self.pcm_.width, self.pcm_.height), cv2.CV_32FC1, mapx, mapy)
+        return cv2.remap(cv_image_raw, mapx, mapy, cv2.INTER_CUBIC, cv_image_rectified)
+
+    def _publish_info(self, caminfo):
+        """
+        Publishes a default CameraInfo - TODO: Fix after distortion applied in simulator
+        """
+        self.cam_info_pub.publish(caminfo) 
+
+    def processImage_(self, image_msg):
+        self._publish_info(self.pcm_)
         self.stats.processed()
 
         if self.intermittent_log_now():
@@ -182,6 +229,10 @@ class LineDetectorNode(object):
 
         # Resize and crop image
         hei_original, wid_original = image_cv.shape[0:2]
+
+
+        # Undistort image
+        image_cv = self.rectify(image_cv)
 
         if self.image_size[0] != hei_original or self.image_size[1] != wid_original:
             # image_cv = cv2.GaussianBlur(image_cv, (5,5), 2)

@@ -4,7 +4,7 @@
     <arg name="config" default="baseline" doc="Specify a config."/>
     <arg name="param_file_name" default="universal" doc="Specify a param file. ex:megaman." />
     
-    <arg name="pkg_name" value="line_detector"/>
+    <arg name="pkg_name" value="custom_line_detector"/>
     <arg name="node_name" default="line_detector_node"/>
     
     <arg name="verbose" default="false" />
@@ -13,6 +13,7 @@
         <!-- run local -->
         <node if="$(arg local)" name="line_detector_node" pkg="$(arg pkg_name)" type="$(arg node_name).py" output="screen" clear_params="true" required="true">
             <rosparam command="load" file="$(find duckietown)/config/$(arg config)/line_detector/$(arg node_name)/$(arg param_file_name).yaml"/>
+            <param name="calibfile" value="$(find duckietown)/config/$(arg config)/calibration/camera_intrinsic/default.yaml"/>
             <param name="verbose" value="$(arg verbose)"/>
         </node>
 
@@ -20,6 +21,7 @@
         <include unless="$(arg local)" file="$(find duckietown)/machines"/>
         <node unless="$(arg local)" machine="$(arg veh)" name="line_detector_node" pkg="$(arg pkg_name)" type="$(arg node_name).py" output="screen" clear_params="true" required="true">
             <rosparam command="load" file="$(find duckietown)/config/$(arg config)/line_detector/$(arg node_name)/$(arg param_file_name).yaml"/>
+            <param name="calibfile" value="$(find duckietown)/config/$(arg config)/calibration/camera_intrinsic/default.yaml"/>
             <param name="verbose" value="$(arg verbose)"/>
         </node>
     </group>

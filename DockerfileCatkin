@@ -9,10 +9,16 @@ RUN /bin/bash -c "mkdir -p custom_ws/src/"
 COPY dt_dependent_node custom_ws/src/dt_dependent_node
 RUN chmod +x custom_ws/src/dt_dependent_node/dt_dependent_node.py
 
+
 # Here's a copied package, slighly edited. We don't launch this, but you could easily 
 # launch this by finding `custom_line_detector`# and putting that in the 
 # lf_slim.launch file  
 COPY custom_line_detector custom_ws/src/custom_line_detector
+COPY custom_lane_filter custom_ws/src/custom_lane_filter
+
+RUN chmod +x custom_ws/src/custom_line_detector/src/line_detector_node.py
+RUN chmod +x custom_ws/src/custom_lane_filter/src/lane_filter_node.py
+
 # Don't forget to "chmod" any node you may need inside!
 
 RUN /bin/bash -c "cd custom_ws/src/"

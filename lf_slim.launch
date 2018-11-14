@@ -22,13 +22,13 @@
         <group if="$(arg /lane_following/line_detection)">
                 <remap from="line_detector_node/transform" to="anti_instagram_node/transform"/>
                 <remap from="line_detector_node/corrected_image/compressed" to="corrected_image/compressed"/>
-                <include file="$(find line_detector)/launch/line_detector_node.launch">
+    		<include file="$(find custom_line_detector)/launch/line_detector_node.launch"> 
                     <arg name="veh" value="$(arg veh)"/>
                     <arg name="config" value="$(arg config)"/>
                     <!-- NOTE: "line_detector_param_file_name" as special case -->
                     <arg name="param_file_name" value="$(arg line_detector_param_file_name)"/>
                     <arg name="verbose" value="$(arg verbose)" />
-                </include>
+                </include> 
             </group>
 
             <!-- Ground Projection -->
@@ -44,7 +44,7 @@
             <group if="$(arg /lane_following/lane_filter)">
                 <remap from="lane_filter_node/segment_list" to="ground_projection/lineseglist_out"/>
                 <remap from="lane_filter_node/car_cmd" to="/$(arg veh)/car_cmd"/>
-                <include file="$(find lane_filter)/launch/lane_filter_node.launch">
+                <include file="$(find custom_lane_filter)/launch/lane_filter_node.launch">
                     <arg name="veh" value="$(arg veh)"/>
                     <arg name="config" value="$(arg config)"/>
                     <arg name="param_file_name" value="$(arg param_file_name)"/>
@@ -81,9 +81,5 @@
     <node pkg="dt_dependent_node" name="dt_dependent_node" type="dt_dependent_node.py" output="screen" /> 
     <!-- End Test Node -->
 
-    <!-- Start Copied, Custom Node -->
-    <!-- Replace Line 25 with this line below! -->
-    <!-- <include file="$(find custom_line_detector)/launch/line_detector_node.launch"/> -->
-    <!-- End Copied, Custom Node -->
 
 </launch>
