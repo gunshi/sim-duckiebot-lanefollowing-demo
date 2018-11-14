@@ -47,6 +47,7 @@ class LineDetectorHSV(dtu.Configurable, LineDetectorInterface):
             raise Exception('Error: Undefined color strings...')
 
         # binary dilation
+
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,
                                            (self.dilation_kernel_size, self.dilation_kernel_size))
         bw = cv2.dilate(bw, kernel)

@@ -56,22 +56,21 @@ class LineDetectorNode(object):
         self.detector_used = self.detector
 
 	self.pcm_ = None
-	self.veh = ''
+
         self.verbose = None
         self.updateParams(None)
 
 	print('calib file is')
 	print(self.calibfile)
-	print(self.veh)
-	self._load_camera_info(self.calibfile)
+	#self._load_camera_info(self.calibfile)
+	self.parse_calibration_yaml(self.calibfile)
         self.fsm_state = "NORMAL_JOYSTICK_CONTROL"
 
         # Publishers
         self.pub_lines = rospy.Publisher("~segment_list", SegmentList, queue_size=1)
         self.pub_image = rospy.Publisher("~image_with_lines", Image, queue_size=1)
         # Publisher for camera info - needed for the ground_projection
-        self.cam_info_pub = rospy.Publisher('/{}/camera_node/real_camera_info'.format(
-            self.veh), CameraInfo, queue_size=1)
+        self.cam_info_pub = rospy.Publisher('/default/camera_node/real_camera_info', CameraInfo, queue_size=1)
 
         # Subscribers
         self.sub_image = rospy.Subscriber("~corrected_image/compressed", CompressedImage, self.cbImage, queue_size=1)
@@ -94,9 +93,9 @@ class LineDetectorNode(object):
 
 
     def updateParams(self, _event):
-	print('updating params')
+	#print('updating params')
         old_verbose = self.verbose
-        self.veh = rospy.get_param('~veh', True)
+
         self.verbose = rospy.get_param('~verbose', True)
         self.calibfile = rospy.get_param('~calibfile')
         # self.loginfo('verbose = %r' % self.verbose)
@@ -136,7 +135,7 @@ class LineDetectorNode(object):
         self.active = switch_msg.data
 
     def cbImage(self, image_msg):
-        # print('line_detector_node: image received!!')
+        print('line_detector_node: image received!!')
         self.stats.received()
 
         if not self.active:
@@ -194,19 +193,39 @@ class LineDetectorNode(object):
 
     def rectify(self, cv_image_raw):
         '''Undistort image'''
+
         cv_image_rectified = np.zeros(np.shape(cv_image_raw))
         mapx = np.ndarray(shape=(self.pcm_.height, self.pcm_.width, 1), dtype='float32')
         mapy = np.ndarray(shape=(self.pcm_.height, self.pcm_.width, 1), dtype='float32')
-        mapx, mapy = cv2.initUndistortRectifyMap(self.pcm_.K, self.pcm_.D, self.pcm_.R, self.pcm_.P, (self.pcm_.width, self.pcm_.height), cv2.CV_32FC1, mapx, mapy)
+        mapx, mapy = cv2.initUndistortRectifyMap(np.array(self.pcm_.K).reshape((3,3)), np.array(self.pcm_.D).reshape((1,5)), np.array(self.pcm_.R).reshape((3,3)), np.array(self.pcm_.P).reshape((3,4)), (self.pcm_.width, self.pcm_.height), cv2.CV_32FC1, mapx, mapy)
         return cv2.remap(cv_image_raw, mapx, mapy, cv2.INTER_CUBIC, cv_image_rectified)
 
     def _publish_info(self, caminfo):
         """
         Publishes a default CameraInfo - TODO: Fix after distortion applied in simulator
         """
+	#print(caminfo)
         self.cam_info_pub.publish(caminfo) 
 
+
+    def parse_calibration_yaml(self, calib_file):
+
+	params = yaml_load_file(calib_file)
+	#with file(calib_file, 'r') as f:
+	#    params = yaml.load(f)
+
+	self.pcm_ = CameraInfo()
+	self.pcm_.height = params['image_height']
+	self.pcm_.width = params['image_width']
+	self.pcm_.distortion_model = params['distortion_model']
+	self.pcm_.K = params['camera_matrix']['data']
+	self.pcm_.D = params['distortion_coefficients']['data']
+	self.pcm_.R = params['rectification_matrix']['data']
+	self.pcm_.P = params['projection_matrix']['data']
+
+
     def processImage_(self, image_msg):
+	
         self._publish_info(self.pcm_)
         self.stats.processed()
 
