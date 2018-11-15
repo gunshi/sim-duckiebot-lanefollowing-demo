@@ -103,7 +103,7 @@ class LineDetectorNode(object):
             self.loginfo('Verbose is now %r' % self.verbose)
 
         self.image_size = rospy.get_param('~img_size')
-        self.top_cutoff = rospy.get_param('~top_cutoff')-15
+        self.top_cutoff = rospy.get_param('~top_cutoff')
 
         if self.detector is None:
             c = rospy.get_param('~detector')
@@ -262,12 +262,12 @@ class LineDetectorNode(object):
         tk.completed('resized')
 
         # milansc: color correction is now done within the image_tranformer_node (antiInstagram pkg)
-        """
+        
         # apply color correction: AntiInstagram
         image_cv_corr = self.ai.applyTransform(image_cv)
         image_cv_corr = cv2.convertScaleAbs(image_cv_corr)
         tk.completed('corrected')
-        """
+        
         # Set the image to be detected
         self.detector_used.setImage(image_cv)
 

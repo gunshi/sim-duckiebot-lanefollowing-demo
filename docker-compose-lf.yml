@@ -1,4 +1,4 @@
-version: '2.2'
+version: '3'
 services:
     gym-duckietown-ros:
         image: duckietown/gym-duckietown-ros-agent
@@ -42,9 +42,9 @@ services:
         - "ROS_MASTER_URI=http://lanefollow:11311"
         - DUCKIETOWN_SERVER=gym-duckietown-server
         - "HOSTNAME=default"
-        cpu_count: 2
-        cpu_percent: 50
-        cpus: 0.5
+        #cpu_count: 2
+        #cpu_percent: 50
+        #cpus: 0.5
       
 
 

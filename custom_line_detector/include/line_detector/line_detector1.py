@@ -39,11 +39,13 @@ class LineDetectorHSV(dtu.Configurable, LineDetectorInterface):
             bw = cv2.inRange(self.hsv, self.hsv_white1, self.hsv_white2)
             bw_ref = cv2.inRange(self.hsv, self.hsv_yellow1, self.hsv_yellow2)
             bw_and = cv2.bitwise_and(bw, bw_ref)
+            bw_or = cv2.bitwise_or(bw, bw_ref)
             bw = bw - bw_and
 
         elif color == 'yellow':
             bw = cv2.inRange(self.hsv, self.hsv_yellow1, self.hsv_yellow2)
             bw_ref = cv2.inRange(self.hsv, self.hsv_white1, self.hsv_white2)
+            bw_or = cv2.bitwise_or(bw, bw_ref)
 
         elif color == 'red':
             bw1 = cv2.inRange(self.hsv, self.hsv_red1, self.hsv_red2)
@@ -56,10 +58,14 @@ class LineDetectorHSV(dtu.Configurable, LineDetectorInterface):
 
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,
                                            (self.dilation_kernel_size, self.dilation_kernel_size))
-        bw = cv2.dilate(bw, kernel)
 
-	
-	## erode as well
+
+	if(color == 'yellow'):
+	    opening = cv2.morphologyEx(bw_or, cv2.MORPH_OPEN, kernel)
+	    bw = cv2.bitwise_and(bw, opening)
+	    #closing = cv2.morphologyEx(, cv2.MORPH_CLOSE, kernel)
+
+        bw = cv2.dilate(bw, kernel)
 
         # refine edge for certain color
         edge_color = cv2.bitwise_and(bw, self.edges)
