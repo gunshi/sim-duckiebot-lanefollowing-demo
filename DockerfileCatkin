@@ -2,6 +2,10 @@ FROM duckietown/rpi-duckiebot-base:master18
 
 RUN ["cross-build-start"]
 
+
+
+
+
 # Change from here
 RUN /bin/bash -c "mkdir -p custom_ws/src/"
 
@@ -15,13 +19,21 @@ RUN chmod +x custom_ws/src/dt_dependent_node/dt_dependent_node.py
 # lf_slim.launch file  
 COPY custom_line_detector custom_ws/src/custom_line_detector
 COPY custom_lane_filter custom_ws/src/custom_lane_filter
+COPY custom_ground_projection custom_ws/src/custom_ground_projection
 
 RUN chmod +x custom_ws/src/custom_line_detector/src/line_detector_node.py
 RUN chmod +x custom_ws/src/custom_lane_filter/src/lane_filter_node.py
+RUN chmod +x custom_ws/src/custom_ground_projection/src/ground_projection_node.py
 
 # Don't forget to "chmod" any node you may need inside!
 
 RUN /bin/bash -c "cd custom_ws/src/"
+
+
+
+
+
+
 
 # Do not change the below line! This ensures that your workspace is 
 # overlayed on top of the Duckietown stack!  
