@@ -20,10 +20,12 @@ RUN chmod +x custom_ws/src/dt_dependent_node/dt_dependent_node.py
 COPY custom_line_detector custom_ws/src/custom_line_detector
 COPY custom_lane_filter custom_ws/src/custom_lane_filter
 COPY custom_ground_projection custom_ws/src/custom_ground_projection
+COPY custom_lane_control custom_ws/src/custom_lane_control
 
 RUN chmod +x custom_ws/src/custom_line_detector/src/line_detector_node.py
 RUN chmod +x custom_ws/src/custom_lane_filter/src/lane_filter_node.py
 RUN chmod +x custom_ws/src/custom_ground_projection/src/ground_projection_node.py
+RUN chmod +x custom_ws/src/custom_lane_control/scripts/lane_controller_node.py
 
 # Don't forget to "chmod" any node you may need inside!
 

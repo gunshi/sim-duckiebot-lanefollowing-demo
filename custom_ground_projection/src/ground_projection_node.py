@@ -32,6 +32,7 @@ class GroundProjectionNode(object):
         rospy.loginfo("camera info topic is " + camera_info_topic)
         rospy.loginfo("waiting for camera info")
         camera_info = rospy.wait_for_message(camera_info_topic, CameraInfo)
+	print(camera_info)
         rospy.loginfo("camera info received")
 
         if False:

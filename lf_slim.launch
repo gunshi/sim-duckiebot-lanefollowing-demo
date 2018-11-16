@@ -33,7 +33,7 @@
 
             <!-- Ground Projection -->
             <group if="$(arg /lane_following/ground_projection)">
-                    <include file="$(find ground_projection)/launch/ground_projection.launch">
+                    <include file="$(find custom_ground_projection)/launch/ground_projection.launch">
                         <arg name="veh" value="$(arg veh)"/>
                         <arg name="config" value="$(arg config)"/>
                         <arg name="param_file_name" value="$(arg param_file_name)"/>
@@ -57,7 +57,7 @@
                 <remap from="lane_controller_node/wheels_cmd_executed" to="wheels_driver_node/wheels_cmd_executed" />
                 <remap from="lane_controller_node/actuator_limits" to="inverse_kinematics_node/actuator_limits" />
 
-                <include file="$(find lane_control)/launch/lane_controller_node.launch">
+                <include file="$(find custom_lane_control)/launch/lane_controller_node.launch">
                     <arg name="veh" value="$(arg veh)"/>
                     <arg name="config" value="$(arg config)"/>
                     <arg name="param_file_name" value="$(arg param_file_name)"/>

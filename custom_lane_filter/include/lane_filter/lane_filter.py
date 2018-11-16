@@ -231,7 +231,7 @@ class LaneFilterHistogram(Configurable, LaneFilterInterface):
             measurement_likelihood = self.generate_measurement_likelihood(segmentsRangeArray[i])
 
             if measurement_likelihood is not None:
-                self.beliefArray[i] = np.multiply(2*self.beliefArray[i], measurement_likelihood)
+                self.beliefArray[i] = np.multiply(2*self.beliefArray[i], measurement_likelihood) 
                 if np.sum(self.beliefArray[i]) == 0:
                     self.beliefArray[i] = measurement_likelihood
                 else:
